@@ -1,0 +1,49 @@
+name: Trigger auto deployment for capps-backend-ntlvzrqzr2jis
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - '**'
+    - '.github/workflows/capps-backend-ntlvzrqzr2jis-AutoDeployTrigger-022c107d-f9f3-4f6a-adce-1d4addc19c30.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:      
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions: 
+      id-token: write #This is required for requesting the OIDC JWT Token
+      contents: read #Required when GH token is used to authenticate with private repo
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.CAPPSBACKENDNTLVZRQZR2JIS_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.CAPPSBACKENDNTLVZRQZR2JIS_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.CAPPSBACKENDNTLVZRQZR2JIS_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}
+          _dockerfilePathKey_: _dockerfilePath_
+          _targetLabelKey_: _targetLabel_
+          registryUrl: ragatsmainacrntlvzrqzr2jis.azurecr.io
+          registryUsername: ${{ secrets.CAPPSBACKENDNTLVZRQZR2JIS_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.CAPPSBACKENDNTLVZRQZR2JIS_REGISTRY_PASSWORD }}
+          containerAppName: capps-backend-ntlvzrqzr2jis
+          resourceGroup: rg-RAGATSMain
+          imageToBuild: ragatsmainacrntlvzrqzr2jis.azurecr.io/capps-backend-ntlvzrqzr2jis:${{ github.sha }}
+          _buildArgumentsKey_: |
+            _buildArgumentsValues_
+
+
